@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Activity, Loader2, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { mockApi } from '@/api/mockApi';
+import { authApi } from '@/api/auth.api';
 import { useAuthStore } from '@/stores/authStore';
-import { getRoleDefaultRoute } from '@/components/ProtectedRoute';
 
 export default function OTPVerificationPage() {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -15,8 +14,10 @@ export default function OTPVerificationPage() {
   const [countdown, setCountdown] = useState(30);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const loginStore = useAuthStore((s) => s.login);
+  const email = (location.state as any)?.email || '';
 
   useEffect(() => {
     if (countdown > 0) {
@@ -42,16 +43,26 @@ export default function OTPVerificationPage() {
   const handleVerify = async () => {
     const code = otp.join('');
     if (code.length !== 6) { toast({ title: 'Enter all 6 digits', variant: 'destructive' }); return; }
+    if (!email) { toast({ title: 'Email missing', description: 'Please register again.', variant: 'destructive' }); navigate('/register'); return; }
     setLoading(true);
     try {
-      const res = await mockApi.verifyOtp(code);
-      setVerified(true);
-      setTimeout(() => {
-        loginStore(res.user, res.tenant, res.token);
-        navigate(getRoleDefaultRoute(res.user.role));
-      }, 1500);
-    } catch {
-      toast({ title: 'Invalid OTP', variant: 'destructive' });
+      const res = await authApi.verifyOtp(email, code);
+      if (res.status === 'success' && res.data) {
+        setVerified(true);
+        // Store tokens and tenant_id, then redirect to login
+        setTimeout(() => {
+          toast({ title: 'Hospital registered!', description: res.message || 'You can now login.' });
+          navigate('/login');
+        }, 1500);
+      }
+    } catch (error: any) {
+      const apiErrors = error.response?.data?.errors;
+      if (apiErrors) {
+        const messages = Object.values(apiErrors).flat().join(' ');
+        toast({ title: 'Verification failed', description: messages, variant: 'destructive' });
+      } else {
+        toast({ title: 'Invalid OTP', variant: 'destructive' });
+      }
     } finally {
       setLoading(false);
     }
