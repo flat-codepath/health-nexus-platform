@@ -9,9 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { mockApi } from '@/api/mockApi';
+import { authApi } from '@/api/auth.api';
 import { useAuthStore } from '@/stores/authStore';
-import { getRoleDefaultRoute } from '@/components/ProtectedRoute';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -34,12 +33,25 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginForm) => {
     setLoading(true);
     try {
-      const res = await mockApi.login(data.email, data.password);
-      login(res.user, res.tenant, res.token);
-      toast({ title: 'Welcome back!', description: `Logged in as ${res.user.name}` });
-      navigate(getRoleDefaultRoute(res.user.role));
-    } catch {
-      toast({ title: 'Login failed', description: 'Invalid email or password', variant: 'destructive' });
+      const res = await authApi.login(data.email, data.password);
+      if (res.status === 'success' && res.data) {
+        // Store access token; user/tenant details will come from a /me endpoint later
+        login(
+          { id: '', name: '', email: data.email, phone: '', role: 'hospital_owner', tenant_id: '' },
+          { id: '', name: '', slug: '', plan: 'trial', created_at: '' },
+          res.data.access
+        );
+        toast({ title: 'Welcome back!', description: `Logged in as ${data.email}` });
+        navigate('/dashboard/owner');
+      }
+    } catch (error: any) {
+      const apiErrors = error.response?.data?.errors;
+      if (apiErrors) {
+        const messages = Object.values(apiErrors).flat().join(' ');
+        toast({ title: 'Login failed', description: messages, variant: 'destructive' });
+      } else {
+        toast({ title: 'Login failed', description: 'Invalid email or password', variant: 'destructive' });
+      }
     } finally {
       setLoading(false);
     }
