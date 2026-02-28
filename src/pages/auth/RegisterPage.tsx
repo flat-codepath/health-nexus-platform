@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { mockApi } from '@/api/mockApi';
+import { authApi } from '@/api/auth.api';
 
 const schema = z.object({
   hospital_name: z.string().min(2, 'Hospital name is required'),
@@ -46,11 +46,25 @@ export default function RegisterPage() {
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
-      await mockApi.register(data as unknown as Record<string, string>);
-      toast({ title: 'Registration successful!', description: 'Please verify your email.' });
-      navigate('/verify-otp', { state: { email: data.email } });
-    } catch {
-      toast({ title: 'Error', description: 'Registration failed', variant: 'destructive' });
+      const res = await authApi.register({
+        hospital_name: data.hospital_name,
+        owner_name: data.owner_name,
+        email: data.email,
+        phone: data.phone,
+        password: data.password,
+      });
+      if (res.status === 'success') {
+        toast({ title: 'OTP sent successfully!', description: 'Check your email for the verification code.' });
+        navigate('/verify-otp', { state: { email: data.email } });
+      }
+    } catch (error: any) {
+      const apiErrors = error.response?.data?.errors;
+      if (apiErrors) {
+        const messages = Object.values(apiErrors).flat().join(' ');
+        toast({ title: 'Registration failed', description: messages, variant: 'destructive' });
+      } else {
+        toast({ title: 'Error', description: 'Registration failed. Please try again.', variant: 'destructive' });
+      }
     } finally {
       setLoading(false);
     }
