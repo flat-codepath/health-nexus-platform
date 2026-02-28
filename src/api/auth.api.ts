@@ -17,6 +17,26 @@ interface ApiResponse<T> {
   errors?: Record<string, string[]>;
 }
 
+interface VerifyOtpRequest {
+  email: string;
+  otp: string;
+}
+
+interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+interface VerifyOtpData {
+  tenant_id: string;
+  tokens: { refresh: string; access: string };
+}
+
+interface LoginData {
+  refresh: string;
+  access: string;
+}
+
 export const authApi = {
   register: async (data: {
     hospital_name: string;
@@ -33,9 +53,26 @@ export const authApi = {
       phone: data.phone,
       password: data.password,
     };
-
     const response = await apiClient.post<ApiResponse<{ email: string }>>(
       '/auth/register/request-otp/',
+      payload
+    );
+    return response.data;
+  },
+
+  verifyOtp: async (email: string, otp: string): Promise<ApiResponse<VerifyOtpData>> => {
+    const payload: VerifyOtpRequest = { email, otp };
+    const response = await apiClient.post<ApiResponse<VerifyOtpData>>(
+      '/auth/register/verify-otp/',
+      payload
+    );
+    return response.data;
+  },
+
+  login: async (email: string, password: string): Promise<ApiResponse<LoginData>> => {
+    const payload: LoginRequest = { email, password };
+    const response = await apiClient.post<ApiResponse<LoginData>>(
+      '/auth/login/',
       payload
     );
     return response.data;
