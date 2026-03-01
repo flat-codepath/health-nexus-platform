@@ -11,6 +11,8 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { authApi } from '@/api/auth.api';
 import { useAuthStore } from '@/stores/authStore';
+import { getRoleDefaultRoute } from '@/components/ProtectedRoute';
+import type { User, Tenant, UserRole } from '@/types';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -19,12 +21,36 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
+function mapMeToUser(me: any): User {
+  return {
+    id: me.id,
+    name: `${me.first_name} ${me.last_name}`.trim(),
+    email: me.email,
+    phone: '',
+    role: (me.role || me.user_type) as UserRole,
+    tenant_id: me.tenant_id || '',
+    branch_id: me.branch_id,
+    department_id: me.department_id,
+  };
+}
+
+function mapMeToTenant(me: any): Tenant | null {
+  if (!me.tenant_id) return null;
+  return {
+    id: me.tenant_id,
+    name: me.tenant_name || '',
+    slug: '',
+    plan: 'trial',
+    created_at: '',
+  };
+}
+
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const login = useAuthStore((s) => s.login);
+  const { login, setUser } = useAuthStore();
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -33,16 +59,21 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginForm) => {
     setLoading(true);
     try {
+      // Step 1: Login to get tokens
       const res = await authApi.login(data.email, data.password);
       if (res.status === 'success' && res.data) {
-        // Store access token; user/tenant details will come from a /me endpoint later
-        login(
-          { id: '', name: '', email: data.email, phone: '', role: 'hospital_owner', tenant_id: '' },
-          { id: '', name: '', slug: '', plan: 'trial', created_at: '' },
-          res.data.access
-        );
-        toast({ title: 'Welcome back!', description: `Logged in as ${data.email}` });
-        navigate('/dashboard/owner');
+        login({ access: res.data.access, refresh: res.data.refresh });
+
+        // Step 2: Fetch user profile
+        const meRes = await authApi.me();
+        if (meRes.status === 'success' && meRes.data) {
+          const user = mapMeToUser(meRes.data);
+          const tenant = mapMeToTenant(meRes.data);
+          setUser(user, tenant);
+
+          toast({ title: 'Welcome back!', description: `Logged in as ${user.name}` });
+          navigate(getRoleDefaultRoute(user.role));
+        }
       }
     } catch (error: any) {
       const apiErrors = error.response?.data?.errors;
@@ -94,17 +125,6 @@ export default function LoginPage() {
               Sign In
             </Button>
           </form>
-
-          <div className="mt-6 p-4 rounded-lg bg-muted text-sm">
-            <p className="font-medium mb-2">Demo Credentials:</p>
-            <div className="space-y-1 text-muted-foreground">
-              <p><span className="font-medium text-foreground">Owner:</span> owner@apollo.com</p>
-              <p><span className="font-medium text-foreground">Branch Admin:</span> admin@apollo.com</p>
-              <p><span className="font-medium text-foreground">Doctor:</span> doctor@apollo.com</p>
-              <p><span className="font-medium text-foreground">Receptionist:</span> receptionist@apollo.com</p>
-              <p className="mt-1">Password: <span className="font-medium text-foreground">password</span></p>
-            </div>
-          </div>
 
           <p className="text-sm text-muted-foreground mt-6 text-center">
             Don't have an account?{' '}
