@@ -2,7 +2,7 @@
 // Core types for the Hospital Management System (multi-tenant)
 // ============================================================
 
-export type UserRole = 'hospital_owner' | 'branch_admin' | 'department_admin' | 'doctor' | 'receptionist';
+export type UserRole = 'hospital_owner' | 'branch_admin' | 'department_admin' | 'doctor' | 'receptionist' | 'saas_admin';
 
 export interface User {
   id: string;

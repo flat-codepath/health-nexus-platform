@@ -17,16 +17,6 @@ interface ApiResponse<T> {
   errors?: Record<string, string[]>;
 }
 
-interface VerifyOtpRequest {
-  email: string;
-  otp: string;
-}
-
-interface LoginRequest {
-  email: string;
-  password: string;
-}
-
 interface VerifyOtpData {
   tenant_id: string;
   tokens: { refresh: string; access: string };
@@ -35,6 +25,21 @@ interface VerifyOtpData {
 interface LoginData {
   refresh: string;
   access: string;
+}
+
+interface MeData {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  user_type: string;
+  role?: string;
+  tenant_id?: string;
+  tenant_name?: string;
+  branch_id?: string;
+  branch_name?: string;
+  department_id?: string;
+  department_name?: string;
 }
 
 export const authApi = {
@@ -61,20 +66,31 @@ export const authApi = {
   },
 
   verifyOtp: async (email: string, otp: string): Promise<ApiResponse<VerifyOtpData>> => {
-    const payload: VerifyOtpRequest = { email, otp };
     const response = await apiClient.post<ApiResponse<VerifyOtpData>>(
       '/auth/register/verify-otp/',
-      payload
+      { email, otp }
     );
     return response.data;
   },
 
   login: async (email: string, password: string): Promise<ApiResponse<LoginData>> => {
-    const payload: LoginRequest = { email, password };
     const response = await apiClient.post<ApiResponse<LoginData>>(
       '/auth/login/',
-      payload
+      { email, password }
     );
+    return response.data;
+  },
+
+  refreshToken: async (refresh: string): Promise<ApiResponse<{ access: string }>> => {
+    const response = await apiClient.post<ApiResponse<{ access: string }>>(
+      '/auth/login/refresh/',
+      { refresh }
+    );
+    return response.data;
+  },
+
+  me: async (): Promise<ApiResponse<MeData>> => {
+    const response = await apiClient.get<ApiResponse<MeData>>('/auth/me/');
     return response.data;
   },
 };

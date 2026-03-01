@@ -5,10 +5,13 @@ import type { User, Tenant } from '@/types';
 interface AuthState {
   user: User | null;
   tenant: Tenant | null;
-  token: string | null;
+  accessToken: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
   activeBranchId: string | null;
-  login: (user: User, tenant: Tenant, token: string) => void;
+  login: (tokens: { access: string; refresh: string }) => void;
+  setUser: (user: User, tenant: Tenant | null) => void;
+  setAccessToken: (token: string) => void;
   logout: () => void;
   setActiveBranch: (branchId: string) => void;
 }
@@ -18,22 +21,29 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       tenant: null,
-      token: null,
+      accessToken: null,
+      refreshToken: null,
       isAuthenticated: false,
       activeBranchId: null,
-      login: (user, tenant, token) =>
+      login: (tokens) =>
+        set({
+          accessToken: tokens.access,
+          refreshToken: tokens.refresh,
+          isAuthenticated: true,
+        }),
+      setUser: (user, tenant) =>
         set({
           user,
           tenant,
-          token,
-          isAuthenticated: true,
           activeBranchId: user.branch_id || null,
         }),
+      setAccessToken: (token) => set({ accessToken: token }),
       logout: () =>
         set({
           user: null,
           tenant: null,
-          token: null,
+          accessToken: null,
+          refreshToken: null,
           isAuthenticated: false,
           activeBranchId: null,
         }),

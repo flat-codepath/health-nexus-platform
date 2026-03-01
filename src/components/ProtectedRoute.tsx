@@ -13,6 +13,7 @@ const ROLE_DEFAULT_ROUTES: Record<UserRole, string> = {
   department_admin: '/dashboard/branch',
   doctor: '/dashboard/doctor',
   receptionist: '/dashboard/reception',
+  saas_admin: '/dashboard/owner',
 };
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
