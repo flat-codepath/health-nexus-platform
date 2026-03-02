@@ -3,15 +3,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Building2, MapPin, Phone, BedDouble, Loader2 } from 'lucide-react';
+import { Building2, MapPin, Phone, BedDouble, Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { organizationApi, type BranchPayload } from '@/api/organization.api';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const branchSchema = z.object({
   name: z.string().min(2, 'Branch name is required'),
@@ -64,82 +63,168 @@ export default function BranchDialog({ open, onOpenChange }: BranchDialogProps) 
     mutation.mutate(data as BranchPayload);
   };
 
-  const fields = [
-    { name: 'name' as const, label: 'Branch Name', placeholder: 'e.g. Downtown Medical Center', icon: Building2 },
-    { name: 'address' as const, label: 'Address', placeholder: '456 Lakeview Avenue', icon: MapPin },
-    { name: 'city' as const, label: 'City', placeholder: 'Chicago', icon: MapPin },
-    { name: 'phone' as const, label: 'Phone', placeholder: '3125557890', icon: Phone },
-    { name: 'total_beds' as const, label: 'Total Beds', placeholder: '200', icon: BedDouble, type: 'number' },
-  ];
+  const close = () => {
+    reset();
+    onOpenChange(false);
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[520px] p-0 gap-0 overflow-hidden">
-        {/* Header with accent gradient */}
-        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-6 pt-6 pb-4">
-          <DialogHeader>
-            <div className="flex items-center gap-3 mb-1">
-              <div className="h-10 w-10 rounded-xl bg-primary/15 flex items-center justify-center">
-                <Building2 className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <DialogTitle className="text-lg">Create New Branch</DialogTitle>
-                <DialogDescription className="text-xs mt-0.5">
-                  Add a new branch to your hospital network
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-        </div>
+    <AnimatePresence>
+      {open && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+            onClick={close}
+          />
 
-        {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5 space-y-4">
-          {fields.map((field) => {
-            const Icon = field.icon;
-            return (
-              <div key={field.name} className="space-y-1.5">
-                <Label htmlFor={field.name} className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  {field.label}
-                </Label>
-                <div className="relative">
-                  <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
-                  <Input
-                    id={field.name}
-                    type={field.type || 'text'}
-                    placeholder={field.placeholder}
-                    className="pl-10 h-11 bg-muted/30 border-border/50 focus:bg-background transition-colors"
-                    {...register(field.name)}
-                  />
+          {/* Panel — Jira-style centered tall rectangle */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.97, y: 16 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+          >
+            <div className="pointer-events-auto w-full max-w-[640px] bg-background rounded-xl border shadow-2xl flex flex-col max-h-[90vh]">
+              {/* Top bar */}
+              <div className="flex items-center justify-between px-6 py-4 border-b">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Building2 className="h-4 w-4 text-primary" />
+                  </div>
+                  <span className="font-semibold text-base">Create Branch</span>
                 </div>
-                {errors[field.name] && (
-                  <p className="text-xs text-destructive">{errors[field.name]?.message}</p>
-                )}
+                <button
+                  onClick={close}
+                  className="h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
-            );
-          })}
 
-          <DialogFooter className="pt-3 gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => { reset(); onOpenChange(false); }}
-              disabled={mutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={mutation.isPending} className="min-w-[120px]">
-              {mutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating…
-                </>
-              ) : (
-                'Create Branch'
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+              {/* Body */}
+              <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto">
+                <div className="px-6 py-5 space-y-5">
+                  {/* Branch Name — full width, prominent */}
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="text-sm font-medium">
+                      Branch Name <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="name"
+                      placeholder="e.g. Downtown Medical Center"
+                      className="h-11 text-base"
+                      {...register('name')}
+                    />
+                    {errors.name && (
+                      <p className="text-xs text-destructive">{errors.name.message}</p>
+                    )}
+                  </div>
+
+                  <Separator />
+
+                  {/* Address */}
+                  <div className="space-y-2">
+                    <Label htmlFor="address" className="text-sm font-medium flex items-center gap-2">
+                      <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                      Address <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="address"
+                      placeholder="456 Lakeview Avenue"
+                      className="h-10"
+                      {...register('address')}
+                    />
+                    {errors.address && (
+                      <p className="text-xs text-destructive">{errors.address.message}</p>
+                    )}
+                  </div>
+
+                  {/* City & Phone — side by side */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="city" className="text-sm font-medium flex items-center gap-2">
+                        <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                        City <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="city"
+                        placeholder="Chicago"
+                        className="h-10"
+                        {...register('city')}
+                      />
+                      {errors.city && (
+                        <p className="text-xs text-destructive">{errors.city.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="phone" className="text-sm font-medium flex items-center gap-2">
+                        <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                        Phone <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="phone"
+                        placeholder="3125557890"
+                        className="h-10"
+                        {...register('phone')}
+                      />
+                      {errors.phone && (
+                        <p className="text-xs text-destructive">{errors.phone.message}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Total Beds */}
+                  <div className="space-y-2">
+                    <Label htmlFor="total_beds" className="text-sm font-medium flex items-center gap-2">
+                      <BedDouble className="h-3.5 w-3.5 text-muted-foreground" />
+                      Total Beds <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="total_beds"
+                      type="number"
+                      placeholder="200"
+                      className="h-10 max-w-[200px]"
+                      {...register('total_beds')}
+                    />
+                    {errors.total_beds && (
+                      <p className="text-xs text-destructive">{errors.total_beds.message}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Footer — sticky bottom */}
+                <div className="sticky bottom-0 bg-background border-t px-6 py-4 flex items-center justify-end gap-3">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={close}
+                    disabled={mutation.isPending}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={mutation.isPending} className="min-w-[130px]">
+                    {mutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating…
+                      </>
+                    ) : (
+                      'Create Branch'
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
