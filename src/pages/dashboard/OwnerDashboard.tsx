@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
@@ -13,6 +14,8 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { mockApi } from '@/api/mockApi';
 import { useAuthStore } from '@/stores/authStore';
+import { organizationApi } from '@/api/organization.api';
+import BranchDialog from '@/components/BranchDialog';
 
 function StatCard({ title, value, change, icon: Icon, prefix = '', loading }: {
   title: string; value: number | string; change: number; icon: React.ElementType; prefix?: string; loading: boolean;
@@ -47,17 +50,20 @@ function StatCard({ title, value, change, icon: Icon, prefix = '', loading }: {
 
 export default function OwnerDashboard() {
   const tenant = useAuthStore((s) => s.tenant);
+  const [branchDialogOpen, setBranchDialogOpen] = useState(false);
 
   const { data: dashboard, isLoading } = useQuery({
     queryKey: ['owner-dashboard'],
     queryFn: mockApi.getOwnerDashboard,
   });
 
-  const { data: branches, isLoading: branchesLoading } = useQuery({
+  // Real API for branches
+  const { data: branchesRes, isLoading: branchesLoading } = useQuery({
     queryKey: ['branches'],
-    queryFn: mockApi.getBranches,
+    queryFn: organizationApi.getBranches,
   });
 
+  const branches = branchesRes?.data ?? [];
   const stats = dashboard?.stats;
 
   return (
@@ -67,7 +73,7 @@ export default function OwnerDashboard() {
           <h1 className="text-2xl font-bold">Welcome back, {useAuthStore.getState().user?.name?.split(' ')[0]}</h1>
           <p className="text-muted-foreground">{tenant?.name} — Global Overview</p>
         </div>
-        <Button>
+        <Button onClick={() => setBranchDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" /> Add Branch
         </Button>
       </div>
@@ -116,14 +122,25 @@ export default function OwnerDashboard() {
         </motion.div>
       </div>
 
-      {/* Branches Table */}
+      {/* Branches Table — now from real API */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="stat-card">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold">Branch Management</h3>
-          <Button variant="outline" size="sm"><Plus className="mr-2 h-3.5 w-3.5" /> New Branch</Button>
+          <Button variant="outline" size="sm" onClick={() => setBranchDialogOpen(true)}>
+            <Plus className="mr-2 h-3.5 w-3.5" /> New Branch
+          </Button>
         </div>
         {branchesLoading ? (
           <div className="space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-16" />)}</div>
+        ) : branches.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <Building2 className="h-10 w-10 mx-auto mb-3 opacity-40" />
+            <p className="font-medium">No branches yet</p>
+            <p className="text-sm mt-1">Create your first branch to get started.</p>
+            <Button className="mt-4" size="sm" onClick={() => setBranchDialogOpen(true)}>
+              <Plus className="mr-2 h-3.5 w-3.5" /> Create Branch
+            </Button>
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -133,19 +150,21 @@ export default function OwnerDashboard() {
                   <th className="text-left py-3 px-4 font-medium">City</th>
                   <th className="text-left py-3 px-4 font-medium">Status</th>
                   <th className="text-left py-3 px-4 font-medium">Beds</th>
-                  <th className="text-left py-3 px-4 font-medium">Occupancy</th>
                   <th className="text-right py-3 px-4 font-medium"></th>
                 </tr>
               </thead>
               <tbody>
-                {branches?.map((b) => (
+                {branches.map((b) => (
                   <tr key={b.id} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
                           <Building2 className="h-4 w-4 text-primary" />
                         </div>
-                        <span className="font-medium">{b.name}</span>
+                        <div>
+                          <span className="font-medium">{b.name}</span>
+                          <p className="text-xs text-muted-foreground">{b.address}</p>
+                        </div>
                       </div>
                     </td>
                     <td className="py-3 px-4 text-muted-foreground">{b.city}</td>
@@ -153,14 +172,6 @@ export default function OwnerDashboard() {
                       <Badge variant={b.status === 'active' ? 'default' : 'secondary'}>{b.status}</Badge>
                     </td>
                     <td className="py-3 px-4">{b.total_beds}</td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-2 bg-muted rounded-full max-w-[100px]">
-                          <div className="h-full bg-primary rounded-full" style={{ width: `${(b.occupied_beds / b.total_beds) * 100}%` }} />
-                        </div>
-                        <span className="text-xs text-muted-foreground">{Math.round((b.occupied_beds / b.total_beds) * 100)}%</span>
-                      </div>
-                    </td>
                     <td className="py-3 px-4 text-right">
                       <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
                     </td>
@@ -171,6 +182,9 @@ export default function OwnerDashboard() {
           </div>
         )}
       </motion.div>
+
+      {/* Branch Create Dialog */}
+      <BranchDialog open={branchDialogOpen} onOpenChange={setBranchDialogOpen} />
     </div>
   );
 }
