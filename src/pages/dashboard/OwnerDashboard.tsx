@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   DollarSign, Users, Stethoscope, BedDouble, TrendingUp, TrendingDown,
-  Building2, MoreHorizontal, Plus,
+  Building2, MoreHorizontal, Plus, UserPlus,
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -16,6 +16,7 @@ import { mockApi } from '@/api/mockApi';
 import { useAuthStore } from '@/stores/authStore';
 import { organizationApi } from '@/api/organization.api';
 import BranchDialog from '@/components/BranchDialog';
+import InviteStaffDialog from '@/components/InviteStaffDialog';
 
 function StatCard({ title, value, change, icon: Icon, prefix = '', loading }: {
   title: string; value: number | string; change: number; icon: React.ElementType; prefix?: string; loading: boolean;
@@ -51,6 +52,7 @@ function StatCard({ title, value, change, icon: Icon, prefix = '', loading }: {
 export default function OwnerDashboard() {
   const tenant = useAuthStore((s) => s.tenant);
   const [branchDialogOpen, setBranchDialogOpen] = useState(false);
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
 
   const { data: dashboard, isLoading } = useQuery({
     queryKey: ['owner-dashboard'],
@@ -73,9 +75,14 @@ export default function OwnerDashboard() {
           <h1 className="text-2xl font-bold">Welcome back, {useAuthStore.getState().user?.name?.split(' ')[0]}</h1>
           <p className="text-muted-foreground">{tenant?.name} — Global Overview</p>
         </div>
-        <Button onClick={() => setBranchDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Add Branch
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" onClick={() => setInviteDialogOpen(true)}>
+            <UserPlus className="mr-2 h-4 w-4" /> Invite Staff
+          </Button>
+          <Button onClick={() => setBranchDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" /> Add Branch
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -185,6 +192,7 @@ export default function OwnerDashboard() {
 
       {/* Branch Create Dialog */}
       <BranchDialog open={branchDialogOpen} onOpenChange={setBranchDialogOpen} />
+      <InviteStaffDialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen} />
     </div>
   );
 }

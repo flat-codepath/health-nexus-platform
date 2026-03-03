@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
@@ -9,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { mockApi } from '@/api/mockApi';
 import { useAuthStore } from '@/stores/authStore';
+import InviteStaffDialog from '@/components/InviteStaffDialog';
 
 const departments = [
   { name: 'Cardiology', doctors: 8, patients: 45, status: 'active' },
@@ -21,6 +23,7 @@ const departments = [
 export default function BranchDashboard() {
   const user = useAuthStore((s) => s.user);
   const branchId = user?.branch_id || 'branch_001';
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ['branch-stats', branchId],
@@ -41,7 +44,7 @@ export default function BranchDashboard() {
           <h1 className="text-2xl font-bold">Branch Dashboard</h1>
           <p className="text-muted-foreground">Downtown Medical Center</p>
         </div>
-        <Button><UserPlus className="mr-2 h-4 w-4" /> Invite Staff</Button>
+        <Button onClick={() => setInviteOpen(true)}><UserPlus className="mr-2 h-4 w-4" /> Invite Staff</Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -108,6 +111,8 @@ export default function BranchDashboard() {
           </table>
         </div>
       </motion.div>
+
+      <InviteStaffDialog open={inviteOpen} onOpenChange={setInviteOpen} />
     </div>
   );
 }
