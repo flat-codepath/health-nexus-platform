@@ -13,6 +13,7 @@ import BranchDashboard from "./pages/dashboard/BranchDashboard";
 import DoctorDashboard from "./pages/dashboard/DoctorDashboard";
 import ReceptionDashboard from "./pages/dashboard/ReceptionDashboard";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import AcceptInvitePage from "./pages/auth/AcceptInvitePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/verify-otp" element={<OTPVerificationPage />} />
+          <Route path="/api/auth/staff/accept-invite/:uid/:token" element={<AcceptInvitePage />} />
 
           {/* Protected Dashboard */}
           <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
