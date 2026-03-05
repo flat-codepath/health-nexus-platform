@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { UserPlus, Search, Calendar, CheckCircle2, Clock, Phone, Mail } from 'lucide-react';
+import { UserPlus, Search, Calendar, CheckCircle2, Clock, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import WalkInAdmission from '@/components/WalkInAdmission';
 
 const mockQueue = [
   { id: '1', name: 'John Smith', phone: '+1-555-0201', time: '09:00', status: 'waiting', type: 'Walk-in' },
@@ -17,6 +16,7 @@ const mockQueue = [
 
 export default function ReceptionDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [walkInOpen, setWalkInOpen] = useState(false);
   const { toast } = useToast();
 
   const checkIn = (name: string) => {
@@ -31,32 +31,14 @@ export default function ReceptionDashboard() {
           <p className="text-muted-foreground">Manage walk-ins, appointments, and check-ins</p>
         </div>
         <div className="flex gap-3">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button><UserPlus className="mr-2 h-4 w-4" /> Register Patient</Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Register New Patient</DialogTitle>
-              </DialogHeader>
-              <form className="space-y-4 mt-4" onSubmit={(e) => { e.preventDefault(); toast({ title: 'Patient registered successfully' }); }}>
-                <div><Label>Full Name</Label><Input placeholder="John Smith" className="mt-1.5" /></div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div><Label>Phone</Label><Input placeholder="+1-555-0100" className="mt-1.5" /></div>
-                  <div><Label>Email</Label><Input type="email" placeholder="patient@email.com" className="mt-1.5" /></div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div><Label>Date of Birth</Label><Input type="date" className="mt-1.5" /></div>
-                  <div><Label>Gender</Label><Input placeholder="Male / Female" className="mt-1.5" /></div>
-                </div>
-                <div><Label>Blood Group</Label><Input placeholder="O+" className="mt-1.5" /></div>
-                <Button type="submit" className="w-full">Register Patient</Button>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => setWalkInOpen(true)}>
+            <UserPlus className="mr-2 h-4 w-4" /> Walk-In Admission
+          </Button>
           <Button variant="outline"><Calendar className="mr-2 h-4 w-4" /> Book Appointment</Button>
         </div>
       </div>
+
+      <WalkInAdmission open={walkInOpen} onClose={() => setWalkInOpen(false)} />
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
