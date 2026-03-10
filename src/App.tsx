@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LandingPage from "./pages/Landing";
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
+import VisitListPage from "./pages/dashboard/VisitListPage";
 import OTPVerificationPage from "./pages/auth/OTPVerificationPage";
 import DashboardLayout from "./components/layout/DashboardLayout";
 import OwnerDashboard from "./pages/dashboard/OwnerDashboard";
