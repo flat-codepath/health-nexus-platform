@@ -93,28 +93,38 @@ export default function DashboardLayout() {
 
         {/* Nav */}
         <nav className="flex-1 py-4 overflow-y-auto">
-          <ul className="space-y-1 px-2">
-            {filteredNav.map((item) => {
-              const active = location.pathname === item.path;
-              return (
-                <li key={item.path}>
-                  <Link
-                    to={item.path}
-                    className={cn(
-                      'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors',
-                      active
-                        ? 'bg-sidebar-accent text-sidebar-primary font-medium'
-                        : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
-                    )}
-                    title={collapsed ? item.label : undefined}
-                  >
-                    <item.icon className="h-5 w-5 shrink-0" />
-                    {!collapsed && <span>{item.label}</span>}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+          {filteredSections.map((section, si) => (
+            <div key={si} className="mb-2">
+              {section.title && !collapsed && (
+                <p className="px-5 pt-3 pb-1 text-[10px] uppercase tracking-widest text-sidebar-foreground/40 font-semibold">
+                  {section.title}
+                </p>
+              )}
+              {section.title && collapsed && <div className="border-t border-sidebar-border mx-3 my-2" />}
+              <ul className="space-y-1 px-2">
+                {section.items.map((item) => {
+                  const active = location.pathname === item.path;
+                  return (
+                    <li key={item.path}>
+                      <Link
+                        to={item.path}
+                        className={cn(
+                          'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors',
+                          active
+                            ? 'bg-sidebar-accent text-sidebar-primary font-medium'
+                            : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                        )}
+                        title={collapsed ? item.label : undefined}
+                      >
+                        <item.icon className="h-5 w-5 shrink-0" />
+                        {!collapsed && <span>{item.label}</span>}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
         </nav>
 
         {/* Bottom */}
