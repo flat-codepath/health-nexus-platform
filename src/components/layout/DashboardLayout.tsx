@@ -19,17 +19,37 @@ interface NavItem {
   roles: UserRole[];
 }
 
-const navItems: NavItem[] = [
-  { label: 'Overview', icon: LayoutDashboard, path: '/dashboard/owner', roles: ['hospital_owner'] },
-  { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard/branch', roles: ['branch_admin'] },
-  { label: 'Patient Queue', icon: Stethoscope, path: '/dashboard/doctor', roles: ['doctor'] },
-  { label: 'Reception', icon: UserCircle, path: '/dashboard/reception', roles: ['receptionist'] },
-  { label: 'Branches', icon: Building2, path: '/dashboard/branches', roles: ['hospital_owner'] },
-  { label: 'Staff', icon: Users, path: '/dashboard/staff', roles: ['hospital_owner', 'branch_admin'] },
-  { label: 'Appointments', icon: Calendar, path: '/dashboard/appointments', roles: ['branch_admin', 'doctor', 'receptionist'] },
-  { label: 'Patients', icon: Users, path: '/dashboard/patients', roles: ['hospital_owner', 'branch_admin', 'doctor', 'receptionist'] },
-  { label: 'Bed Management', icon: BedDouble, path: '/dashboard/beds', roles: ['branch_admin'] },
-  { label: 'Settings', icon: Settings, path: '/dashboard/settings', roles: ['hospital_owner', 'branch_admin'] },
+interface NavSection {
+  title?: string;
+  items: NavItem[];
+}
+
+const navSections: NavSection[] = [
+  {
+    items: [
+      { label: 'Overview', icon: LayoutDashboard, path: '/dashboard/owner', roles: ['hospital_owner'] },
+      { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard/branch', roles: ['branch_admin'] },
+      { label: 'Patient Queue', icon: Stethoscope, path: '/dashboard/doctor', roles: ['doctor'] },
+      { label: 'Reception', icon: UserCircle, path: '/dashboard/reception', roles: ['receptionist'] },
+    ],
+  },
+  {
+    title: 'Visits',
+    items: [
+      { label: 'Visit List', icon: Activity, path: '/dashboard/visits', roles: ['receptionist', 'branch_admin'] },
+    ],
+  },
+  {
+    title: 'Management',
+    items: [
+      { label: 'Branches', icon: Building2, path: '/dashboard/branches', roles: ['hospital_owner'] },
+      { label: 'Staff', icon: Users, path: '/dashboard/staff', roles: ['hospital_owner', 'branch_admin'] },
+      { label: 'Appointments', icon: Calendar, path: '/dashboard/appointments', roles: ['branch_admin', 'doctor', 'receptionist'] },
+      { label: 'Patients', icon: Users, path: '/dashboard/patients', roles: ['hospital_owner', 'branch_admin', 'doctor', 'receptionist'] },
+      { label: 'Bed Management', icon: BedDouble, path: '/dashboard/beds', roles: ['branch_admin'] },
+      { label: 'Settings', icon: Settings, path: '/dashboard/settings', roles: ['hospital_owner', 'branch_admin'] },
+    ],
+  },
 ];
 
 export default function DashboardLayout() {
