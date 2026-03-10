@@ -34,6 +34,7 @@ export interface WalkInPayload {
   department_id: string;
   visit_type: 'fresh' | 'follow_up';
   chief_complaint: string;
+  address?: string;
 }
 
 export interface WalkInResponse {
@@ -45,11 +46,28 @@ export interface WalkInResponse {
   invoice_status: string;
 }
 
+export interface VisitRecord {
+  id: string;
+  patient_name: string;
+  phone: string;
+  department: string;
+  doctor: string;
+  visit_type: 'fresh' | 'follow_up';
+  chief_complaint: string;
+  status: string;
+  created_at: string;
+}
+
 export const clinicalApi = {
   searchPatients: async (query: string): Promise<ApiResponse<PatientSearchResult[]>> => {
     const response = await apiClient.get<ApiResponse<PatientSearchResult[]>>('/clinical/patients/', {
       params: { search: query },
     });
+    return response.data;
+  },
+
+  getDoctorsByDepartment: async (departmentId: string): Promise<ApiResponse<DoctorData[]>> => {
+    const response = await apiClient.get<ApiResponse<DoctorData[]>>(`/organization/departments/${departmentId}/doctors`);
     return response.data;
   },
 
@@ -60,6 +78,11 @@ export const clinicalApi = {
 
   createWalkIn: async (data: WalkInPayload): Promise<ApiResponse<WalkInResponse>> => {
     const response = await apiClient.post<ApiResponse<WalkInResponse>>('/clinical/visits/walk-in/', data);
+    return response.data;
+  },
+
+  getVisits: async (params: Record<string, string>): Promise<ApiResponse<VisitRecord[]>> => {
+    const response = await apiClient.get<ApiResponse<VisitRecord[]>>('/clinical/visit/', { params });
     return response.data;
   },
 };

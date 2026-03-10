@@ -19,17 +19,37 @@ interface NavItem {
   roles: UserRole[];
 }
 
-const navItems: NavItem[] = [
-  { label: 'Overview', icon: LayoutDashboard, path: '/dashboard/owner', roles: ['hospital_owner'] },
-  { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard/branch', roles: ['branch_admin'] },
-  { label: 'Patient Queue', icon: Stethoscope, path: '/dashboard/doctor', roles: ['doctor'] },
-  { label: 'Reception', icon: UserCircle, path: '/dashboard/reception', roles: ['receptionist'] },
-  { label: 'Branches', icon: Building2, path: '/dashboard/branches', roles: ['hospital_owner'] },
-  { label: 'Staff', icon: Users, path: '/dashboard/staff', roles: ['hospital_owner', 'branch_admin'] },
-  { label: 'Appointments', icon: Calendar, path: '/dashboard/appointments', roles: ['branch_admin', 'doctor', 'receptionist'] },
-  { label: 'Patients', icon: Users, path: '/dashboard/patients', roles: ['hospital_owner', 'branch_admin', 'doctor', 'receptionist'] },
-  { label: 'Bed Management', icon: BedDouble, path: '/dashboard/beds', roles: ['branch_admin'] },
-  { label: 'Settings', icon: Settings, path: '/dashboard/settings', roles: ['hospital_owner', 'branch_admin'] },
+interface NavSection {
+  title?: string;
+  items: NavItem[];
+}
+
+const navSections: NavSection[] = [
+  {
+    items: [
+      { label: 'Overview', icon: LayoutDashboard, path: '/dashboard/owner', roles: ['hospital_owner'] },
+      { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard/branch', roles: ['branch_admin'] },
+      { label: 'Patient Queue', icon: Stethoscope, path: '/dashboard/doctor', roles: ['doctor'] },
+      { label: 'Reception', icon: UserCircle, path: '/dashboard/reception', roles: ['receptionist'] },
+    ],
+  },
+  {
+    title: 'Visits',
+    items: [
+      { label: 'Visit List', icon: Activity, path: '/dashboard/visits', roles: ['receptionist', 'branch_admin'] },
+    ],
+  },
+  {
+    title: 'Management',
+    items: [
+      { label: 'Branches', icon: Building2, path: '/dashboard/branches', roles: ['hospital_owner'] },
+      { label: 'Staff', icon: Users, path: '/dashboard/staff', roles: ['hospital_owner', 'branch_admin'] },
+      { label: 'Appointments', icon: Calendar, path: '/dashboard/appointments', roles: ['branch_admin', 'doctor', 'receptionist'] },
+      { label: 'Patients', icon: Users, path: '/dashboard/patients', roles: ['hospital_owner', 'branch_admin', 'doctor', 'receptionist'] },
+      { label: 'Bed Management', icon: BedDouble, path: '/dashboard/beds', roles: ['branch_admin'] },
+      { label: 'Settings', icon: Settings, path: '/dashboard/settings', roles: ['hospital_owner', 'branch_admin'] },
+    ],
+  },
 ];
 
 export default function DashboardLayout() {
@@ -38,7 +58,12 @@ export default function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const filteredNav = navItems.filter((item) => user && item.roles.includes(user.role));
+  const filteredSections = navSections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => user && item.roles.includes(user.role)),
+    }))
+    .filter((section) => section.items.length > 0);
 
   const handleLogout = () => {
     logout();
@@ -68,28 +93,38 @@ export default function DashboardLayout() {
 
         {/* Nav */}
         <nav className="flex-1 py-4 overflow-y-auto">
-          <ul className="space-y-1 px-2">
-            {filteredNav.map((item) => {
-              const active = location.pathname === item.path;
-              return (
-                <li key={item.path}>
-                  <Link
-                    to={item.path}
-                    className={cn(
-                      'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors',
-                      active
-                        ? 'bg-sidebar-accent text-sidebar-primary font-medium'
-                        : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
-                    )}
-                    title={collapsed ? item.label : undefined}
-                  >
-                    <item.icon className="h-5 w-5 shrink-0" />
-                    {!collapsed && <span>{item.label}</span>}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+          {filteredSections.map((section, si) => (
+            <div key={si} className="mb-2">
+              {section.title && !collapsed && (
+                <p className="px-5 pt-3 pb-1 text-[10px] uppercase tracking-widest text-sidebar-foreground/40 font-semibold">
+                  {section.title}
+                </p>
+              )}
+              {section.title && collapsed && <div className="border-t border-sidebar-border mx-3 my-2" />}
+              <ul className="space-y-1 px-2">
+                {section.items.map((item) => {
+                  const active = location.pathname === item.path;
+                  return (
+                    <li key={item.path}>
+                      <Link
+                        to={item.path}
+                        className={cn(
+                          'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors',
+                          active
+                            ? 'bg-sidebar-accent text-sidebar-primary font-medium'
+                            : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                        )}
+                        title={collapsed ? item.label : undefined}
+                      >
+                        <item.icon className="h-5 w-5 shrink-0" />
+                        {!collapsed && <span>{item.label}</span>}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
         </nav>
 
         {/* Bottom */}
