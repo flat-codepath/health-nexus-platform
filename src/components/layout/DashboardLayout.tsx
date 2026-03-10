@@ -58,7 +58,12 @@ export default function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const filteredNav = navItems.filter((item) => user && item.roles.includes(user.role));
+  const filteredSections = navSections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => user && item.roles.includes(user.role)),
+    }))
+    .filter((section) => section.items.length > 0);
 
   const handleLogout = () => {
     logout();
