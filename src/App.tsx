@@ -41,6 +41,7 @@ const App = () => (
             <Route path="branch" element={<ProtectedRoute allowedRoles={['branch_admin']}><BranchDashboard /></ProtectedRoute>} />
             <Route path="doctor" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorDashboard /></ProtectedRoute>} />
             <Route path="reception" element={<ProtectedRoute allowedRoles={['receptionist']}><ReceptionDashboard /></ProtectedRoute>} />
+            <Route path="visits" element={<ProtectedRoute allowedRoles={['receptionist', 'branch_admin']}><VisitListPage /></ProtectedRoute>} />
             {/* Placeholder routes for sidebar links */}
             <Route path="branches" element={<ProtectedRoute allowedRoles={['hospital_owner']}><OwnerDashboard /></ProtectedRoute>} />
             <Route path="staff" element={<ProtectedRoute allowedRoles={['hospital_owner', 'branch_admin']}><BranchDashboard /></ProtectedRoute>} />
