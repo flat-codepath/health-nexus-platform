@@ -22,6 +22,7 @@ export interface DoctorData {
   first_name: string;
   last_name: string;
   department_id: string;
+  specialization?: string;
 }
 
 export interface WalkInPayload {
