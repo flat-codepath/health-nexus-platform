@@ -1,8 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  X, Search, Phone, Stethoscope, CheckCircle2, Receipt,
-  Loader2, AlertCircle, UserPlus, Heart, MapPin
+  X, Search, User, Phone, FileText, Stethoscope,
+  ChevronRight, CheckCircle2, Receipt, Loader2, AlertCircle,
+  UserPlus, Heart
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,7 +40,6 @@ export default function WalkInAdmission({ open, onClose }: WalkInAdmissionProps)
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
   const [gender, setGender] = useState('');
-  const [address, setAddress] = useState('');
 
   // Visit fields
   const [visitType, setVisitType] = useState<'fresh' | 'follow_up'>('fresh');
@@ -64,15 +64,19 @@ export default function WalkInAdmission({ open, onClose }: WalkInAdmissionProps)
     enabled: open,
   });
 
-  // Load doctors by department
-  const { data: doctorResponse, isFetching: isDoctorsLoading } = useQuery({
-    queryKey: ['departmentDoctors', departmentId],
-    queryFn: () => clinicalApi.getDoctorsByDepartment(departmentId),
-    enabled: open && !!departmentId,
+  // Load doctors
+  const { data: doctorResponse } = useQuery({
+    queryKey: ['doctors'],
+    queryFn: clinicalApi.getDoctors,
+    enabled: open,
   });
 
   const departments = deptResponse?.data || [];
-  const filteredDoctors = doctorResponse?.data || [];
+  const allDoctors = doctorResponse?.data || [];
+  const filteredDoctors = departmentId
+    ? allDoctors.filter((d) => d.department_id === departmentId)
+    : allDoctors;
+
   const patients = searchResults?.data || [];
   const noPatientFound = searchTriggered && phoneSearch.length >= 3 && !isSearching && patients.length === 0;
 
@@ -133,7 +137,6 @@ export default function WalkInAdmission({ open, onClose }: WalkInAdmissionProps)
       payload.last_name = lastName.trim();
       payload.phone = phone.trim();
       payload.gender = gender;
-      if (address.trim()) payload.address = address.trim();
     }
 
     walkInMutation.mutate(payload);
@@ -147,7 +150,6 @@ export default function WalkInAdmission({ open, onClose }: WalkInAdmissionProps)
     setLastName('');
     setPhone('');
     setGender('');
-    setAddress('');
     setVisitType('fresh');
     setDepartmentId('');
     setDoctorId('');
@@ -182,7 +184,7 @@ export default function WalkInAdmission({ open, onClose }: WalkInAdmissionProps)
 
           {/* Panel */}
           <motion.div
-            className="relative w-full max-w-[720px] bg-background rounded-xl border shadow-2xl flex flex-col max-h-[92vh]"
+            className="relative w-full max-w-[680px] bg-background rounded-xl border shadow-2xl flex flex-col max-h-[92vh]"
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -238,7 +240,7 @@ export default function WalkInAdmission({ open, onClose }: WalkInAdmissionProps)
                   </Button>
                 </div>
 
-                {/* Search results */}
+                {/* Search results list */}
                 <AnimatePresence>
                   {searchTriggered && patients.length > 0 && !selectedPatient && (
                     <motion.div
@@ -260,6 +262,7 @@ export default function WalkInAdmission({ open, onClose }: WalkInAdmissionProps)
                             <p className="text-sm font-medium text-foreground">{p.first_name} {p.last_name}</p>
                             <p className="text-xs text-muted-foreground">MRN: {p.mrn} · {p.phone}</p>
                           </div>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                         </button>
                       ))}
                     </motion.div>
@@ -313,21 +316,36 @@ export default function WalkInAdmission({ open, onClose }: WalkInAdmissionProps)
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <Label className="text-xs text-muted-foreground">First Name *</Label>
-                          <Input placeholder="John" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="mt-1" />
+                          <Label className="text-xs text-muted-foreground">First Name</Label>
+                          <Input
+                            placeholder="John"
+                            value={firstName}
+                            onChange={(e) => setFirstName(e.target.value)}
+                            className="mt-1"
+                          />
                         </div>
                         <div>
-                          <Label className="text-xs text-muted-foreground">Last Name *</Label>
-                          <Input placeholder="Doe" value={lastName} onChange={(e) => setLastName(e.target.value)} className="mt-1" />
+                          <Label className="text-xs text-muted-foreground">Last Name</Label>
+                          <Input
+                            placeholder="Doe"
+                            value={lastName}
+                            onChange={(e) => setLastName(e.target.value)}
+                            className="mt-1"
+                          />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <Label className="text-xs text-muted-foreground">Phone *</Label>
-                          <Input placeholder="9876543210" value={phone || phoneSearch} onChange={(e) => setPhone(e.target.value)} className="mt-1" />
+                          <Label className="text-xs text-muted-foreground">Phone</Label>
+                          <Input
+                            placeholder="9876543210"
+                            value={phone || phoneSearch}
+                            onChange={(e) => setPhone(e.target.value)}
+                            className="mt-1"
+                          />
                         </div>
                         <div>
-                          <Label className="text-xs text-muted-foreground">Gender *</Label>
+                          <Label className="text-xs text-muted-foreground">Gender</Label>
                           <div className="flex gap-1.5 mt-1">
                             {GENDERS.map((g) => (
                               <button
@@ -346,18 +364,12 @@ export default function WalkInAdmission({ open, onClose }: WalkInAdmissionProps)
                           </div>
                         </div>
                       </div>
-                      <div>
-                        <Label className="text-xs text-muted-foreground">Address</Label>
-                        <div className="relative mt-1">
-                          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                          <Input placeholder="Patient address..." value={address} onChange={(e) => setAddress(e.target.value)} className="pl-9" />
-                        </div>
-                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </section>
 
+              {/* Divider */}
               <div className="border-t" />
 
               {/* ── Section 2: Visit Details ── */}
@@ -367,7 +379,7 @@ export default function WalkInAdmission({ open, onClose }: WalkInAdmissionProps)
                   Visit Details
                 </div>
 
-                {/* Visit Type */}
+                {/* Visit Type chips */}
                 <div>
                   <Label className="text-xs text-muted-foreground">Visit Type</Label>
                   <div className="flex gap-2 mt-1.5">
@@ -382,16 +394,18 @@ export default function WalkInAdmission({ open, onClose }: WalkInAdmissionProps)
                             : 'border-border hover:border-primary/30'
                         }`}
                       >
-                        <p className={`text-sm font-medium ${visitType === vt.value ? 'text-primary' : 'text-foreground'}`}>{vt.label}</p>
+                        <p className={`text-sm font-medium ${visitType === vt.value ? 'text-primary' : 'text-foreground'}`}>
+                          {vt.label}
+                        </p>
                         <p className="text-xs text-muted-foreground mt-0.5">{vt.description}</p>
                       </button>
                     ))}
                   </div>
                 </div>
 
-                {/* Department */}
+                {/* Department selection */}
                 <div>
-                  <Label className="text-xs text-muted-foreground">Department *</Label>
+                  <Label className="text-xs text-muted-foreground">Department</Label>
                   <div className="flex flex-wrap gap-1.5 mt-1.5">
                     {departments.map((dept) => (
                       <button
@@ -413,19 +427,13 @@ export default function WalkInAdmission({ open, onClose }: WalkInAdmissionProps)
                   </div>
                 </div>
 
-                {/* Doctor (cascaded) */}
+                {/* Doctor selection — cascaded by department */}
                 <div>
                   <Label className="text-xs text-muted-foreground">
-                    Doctor * {!departmentId && '(select department first)'}
+                    Doctor {departmentId ? '' : '(select department first)'}
                   </Label>
                   <div className="flex flex-wrap gap-1.5 mt-1.5">
-                    {isDoctorsLoading && departmentId && (
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground py-1.5">
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        Loading doctors...
-                      </div>
-                    )}
-                    {!isDoctorsLoading && filteredDoctors.map((doc) => (
+                    {filteredDoctors.map((doc) => (
                       <button
                         key={doc.id}
                         type="button"
@@ -444,7 +452,7 @@ export default function WalkInAdmission({ open, onClose }: WalkInAdmissionProps)
                         </span>
                       </button>
                     ))}
-                    {!isDoctorsLoading && departmentId && filteredDoctors.length === 0 && (
+                    {departmentId && filteredDoctors.length === 0 && (
                       <p className="text-xs text-muted-foreground py-1.5">No doctors in this department</p>
                     )}
                     {!departmentId && (
@@ -455,7 +463,7 @@ export default function WalkInAdmission({ open, onClose }: WalkInAdmissionProps)
 
                 {/* Chief complaint */}
                 <div>
-                  <Label className="text-xs text-muted-foreground">Chief Complaint *</Label>
+                  <Label className="text-xs text-muted-foreground">Chief Complaint</Label>
                   <Textarea
                     placeholder="Describe the patient's primary complaint..."
                     value={chiefComplaint}
@@ -468,8 +476,14 @@ export default function WalkInAdmission({ open, onClose }: WalkInAdmissionProps)
 
             {/* Footer */}
             <div className="border-t bg-muted/20 px-6 py-4 flex items-center justify-between rounded-b-xl">
-              <Button variant="ghost" onClick={handleClose}>Cancel</Button>
-              <Button onClick={handleSubmit} disabled={walkInMutation.isPending} className="min-w-[200px]">
+              <Button variant="ghost" onClick={handleClose}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={walkInMutation.isPending}
+                className="min-w-[200px]"
+              >
                 {walkInMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
