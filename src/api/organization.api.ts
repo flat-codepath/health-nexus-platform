@@ -59,6 +59,11 @@ export const organizationApi = {
     return response.data;
   },
 
+  getBranchDepartments: async (branchId: string): Promise<ApiResponse<DepartmentData[]>> => {
+    const response = await apiClient.get<ApiResponse<DepartmentData[]>>(`/organization/branches/${branchId}/departments`);
+    return response.data;
+  },
+
   inviteStaff: async (data: InviteStaffPayload): Promise<ApiResponse<any>> => {
     const response = await apiClient.post<ApiResponse<any>>('/organization/staff/invite/', data);
     return response.data;
