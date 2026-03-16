@@ -60,6 +60,11 @@ export const clinicalApi = {
     return response.data;
   },
 
+  getDepartmentDoctors: async (departmentId: string): Promise<ApiResponse<DoctorData[]>> => {
+    const response = await apiClient.get<ApiResponse<DoctorData[]>>(`/organization/departments/${departmentId}/doctors`);
+    return response.data;
+  },
+
   createWalkIn: async (data: WalkInPayload): Promise<ApiResponse<WalkInResponse>> => {
     const response = await apiClient.post<ApiResponse<WalkInResponse>>('/clinical/visits/walk-in/', data);
     return response.data;
