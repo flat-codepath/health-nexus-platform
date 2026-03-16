@@ -48,6 +48,7 @@ export default function InviteStaffDialog({ open, onOpenChange }: InviteStaffDia
     reset,
     control,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<InviteFormValues>({
     resolver: zodResolver(inviteSchema),
@@ -62,7 +63,6 @@ export default function InviteStaffDialog({ open, onOpenChange }: InviteStaffDia
   });
 
   const selectedBranch = watch('branch');
-  const { setValue } = useForm<InviteFormValues>();
 
   // Fetch branches (only needed for hospital owner)
   const { data: branchesRes, isLoading: branchesLoading } = useQuery({
