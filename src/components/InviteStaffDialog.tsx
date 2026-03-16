@@ -327,7 +327,7 @@ export default function InviteStaffDialog({ open, onOpenChange }: InviteStaffDia
                       <Stethoscope className="h-3.5 w-3.5 text-muted-foreground" />
                       Department <span className="text-destructive">*</span>
                     </Label>
-                    {departmentsLoading ? (
+                    {depsLoading ? (
                       <div className="space-y-2">
                         <Skeleton className="h-12 rounded-lg" />
                         <Skeleton className="h-12 rounded-lg" />
