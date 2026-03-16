@@ -22,6 +22,7 @@ export interface DoctorData {
   first_name: string;
   last_name: string;
   department_id: string;
+  specialization?: string;
 }
 
 export interface WalkInPayload {
@@ -30,6 +31,7 @@ export interface WalkInPayload {
   last_name?: string;
   phone?: string;
   gender?: string;
+  address?: string;
   doctor_id: string;
   department_id: string;
   visit_type: 'fresh' | 'follow_up';
@@ -55,6 +57,11 @@ export const clinicalApi = {
 
   getDoctors: async (): Promise<ApiResponse<DoctorData[]>> => {
     const response = await apiClient.get<ApiResponse<DoctorData[]>>('/organization/doctors/');
+    return response.data;
+  },
+
+  getDepartmentDoctors: async (departmentId: string): Promise<ApiResponse<DoctorData[]>> => {
+    const response = await apiClient.get<ApiResponse<DoctorData[]>>(`/organization/departments/${departmentId}/doctors`);
     return response.data;
   },
 
