@@ -62,6 +62,7 @@ export default function InviteStaffDialog({ open, onOpenChange }: InviteStaffDia
   });
 
   const selectedBranch = watch('branch');
+  const { setValue } = useForm<InviteFormValues>();
 
   // Fetch branches (only needed for hospital owner)
   const { data: branchesRes, isLoading: branchesLoading } = useQuery({
@@ -70,19 +71,25 @@ export default function InviteStaffDialog({ open, onOpenChange }: InviteStaffDia
     enabled: isHospitalOwner,
   });
 
-  // Fetch departments
+  // Hospital owner: fetch departments for the selected branch
+  const { data: branchDepsRes, isLoading: branchDepsLoading } = useQuery({
+    queryKey: ['branch-departments', selectedBranch],
+    queryFn: () => organizationApi.getBranchDepartments(selectedBranch),
+    enabled: isHospitalOwner && !!selectedBranch,
+  });
+
+  // Branch admin: fetch all departments (within their branch)
   const { data: departmentsRes, isLoading: departmentsLoading } = useQuery({
     queryKey: ['departments'],
     queryFn: organizationApi.getDepartments,
+    enabled: !isHospitalOwner,
   });
 
   const branches = branchesRes?.data ?? [];
-  const allDepartments = departmentsRes?.data ?? [];
-
-  // Filter departments by selected branch
-  const filteredDepartments = selectedBranch
-    ? allDepartments.filter((d) => d.branch_id === selectedBranch)
-    : allDepartments;
+  const filteredDepartments = isHospitalOwner
+    ? (branchDepsRes?.data ?? [])
+    : (departmentsRes?.data ?? []);
+  const depsLoading = isHospitalOwner ? branchDepsLoading : departmentsLoading;
 
   const mutation = useMutation({
     mutationFn: (data: InviteStaffPayload) => organizationApi.inviteStaff(data),
