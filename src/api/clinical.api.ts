@@ -31,6 +31,7 @@ export interface WalkInPayload {
   last_name?: string;
   phone?: string;
   gender?: string;
+  address?: string;
   doctor_id: string;
   department_id: string;
   visit_type: 'fresh' | 'follow_up';
