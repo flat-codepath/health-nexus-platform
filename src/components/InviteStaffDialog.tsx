@@ -65,6 +65,13 @@ export default function InviteStaffDialog({ open, onOpenChange }: InviteStaffDia
 
   const selectedBranch = watch('branch');
 
+  // Reset department when branch changes (hospital owner)
+  useEffect(() => {
+    if (isHospitalOwner) {
+      setValue('department', '');
+    }
+  }, [selectedBranch, isHospitalOwner, setValue]);
+
   // Fetch branches (only needed for hospital owner)
   const { data: branchesRes, isLoading: branchesLoading } = useQuery({
     queryKey: ['branches'],
